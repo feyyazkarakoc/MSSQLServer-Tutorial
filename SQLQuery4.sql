@@ -1,4 +1,4 @@
-USE Sample
+USE [Sample]
 GO
 
 Select * from tblGender
