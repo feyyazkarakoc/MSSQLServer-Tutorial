@@ -1,0 +1,199 @@
+
+--PART 1 ***************************************************************************
+
+Alter Database Sample2 Modify Name = Sample3
+
+
+
+sp_renameDB 'Sample3','Sample4'
+
+
+Drop database Sample4
+
+Drop database master
+
+Alter Database Sample4 Set SINGLE_USER With Rollback Immediate
+
+Drop database Sample4
+
+
+
+--PART 2 ***************************************************************************
+
+
+
+
+
+
+
+
+--PART 3 ***************************************************************************
+
+Use [Sample]
+Go
+
+Create Table tblGender
+(
+ID int NOT NULL Primary Key,
+Gender nvarchar(50) NOT NULL
+)
+
+Alter table tblPerson add constraint tblPerson_GenderID_FK
+Foreign Key (GenderId) references tblGender(ID)
+
+
+
+
+--PART 4 ***************************************************************************
+
+
+USE [Sample]
+GO
+
+Select * from tblGender
+Select * from tblPerson
+
+Insert into tblPerson (ID,Name,Email) Values (7,'Rich','r@r.com')
+
+ALTER TABLE tblPerson
+ADD CONSTRAINT DF_tblPerson_GenderId
+DEFAULT 3 FOR GenderId
+
+Insert into tblPerson (ID,Name,Email) Values (8,'Mike','m@m.com')
+
+Insert into tblPerson (ID,Name,Email,GenderId) Values (9,'Sara','s@s.com',1)
+
+Insert into tblPerson (ID,Name,Email,GenderId) Values (10,'John','j@j.com',null)
+
+ALTER TABLE tblPerson
+DROP CONSTRAINT DF_tblPerson_GenderId 
+
+
+
+
+
+
+--PART 5 ***************************************************************************
+
+
+/*Kaskad Referans Bütünlüğü Kısıtlaması
+Kaskad referans bütünlüğü kısıtlaması, Microsoft SQL Server'ın bir
+kullanıcı bir anahtar değerini silmeye veya güncellemeye çalıştığında
+alacağı eylemleri tanımlamasına olanak tanır.
+Örneğin, tblGender tablosundaki ID'si 1 olan bir satırı silerseniz, 
+bu durumda tblPerson tablosundaki o ID'ye bağlı olan satırlar "yetersiz" 
+(orphan) hale gelir. Bu durum, o satırın referansını kaybettiği için bir sorun yaratır.
+SQL Server, bu tür durumlarda ne yapılacağını belirlemek için kaskad referans 
+bütünlüğü kısıtlamasını kullanabilir. Varsayılan olarak, eğer böyle bir durum gerçekleşirse,
+DELETE veya UPDATE ifadesi geri alınır (rollback) ve veritabanında yapılan değişiklikler 
+iptal edilir. Bu, verilerin tutarlılığını korumak için önemli bir mekanizmadır.
+Kısaca, bu kısıtlama, veritabanındaki ilişkilerin bütünlüğünü sağlamaya yardımcı 
+olur ve bir kaydı silerken veya güncellerken diğer tablolardaki ilişkili verilerin 
+nasıl etkileneceğini kontrol eder.*/
+
+SELECT * FROM tblGender
+SELECT * FROM tblPerson
+
+DELETE FROM tblGender WHERE ID=1 --Hata verir silmez
+
+ALTER TABLE  tblPerson
+ADD CONSTRAINT DF_tblPerson_GenderId
+DEFAULT 3 FOR GenderId
+
+
+
+DELETE FROM tblGender WHERE ID=1
+
+DELETE FROM tblGender WHERE ID=3
+
+INSERT INTO tblGender (ID,Gender) Values(1,'Male')
+INSERT INTO tblGender (ID,Gender) Values(3,'Unknown')
+
+INSERT INTO tblPerson (ID,Name,Email,GenderId) Values(11,'Feyyaz','f@f.com',1)
+
+DELETE FROM tblGender WHERE ID=1
+
+ 
+
+
+
+
+
+
+
+
+
+--PART 6 ***************************************************************************
+
+/*Check kısıtlaması, SQL Server'da bir sütuna girebilecek değerlerin aralığını
+sınırlamak için kullanılır. Bu, veritabanındaki verilerin doğruluğunu ve tutarlılığını
+sağlamak amacıyla yapılır.*/
+
+/*Eğer Boolean ifadesi (yani kısıtlama koşulu) doğruysa, check kısıtlaması geçerli kabul
+edilir. Aksi takdirde, yani ifade yanlışsa, SQL Server hata verir ve işlemi gerçekleştirmez.
+Eğer AGE sütunu NULL değerine sahipse, bu durumda check kısıtlaması devreye girmez; çünkü NULL,
+belirli bir değeri temsil etmez.*/
+
+ALTER TABLE tblPerson
+ADD Age INT NULL
+
+SELECT * FROM tblGender
+SELECT * FROM tblPerson
+
+INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,-996)
+
+DELETE FROM tblPerson WHERE ID=14
+
+--Constrainti ekledik
+INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,-996) --Hata
+
+INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,25)
+
+INSERT INTO tblPerson VALUES(15,'Züleyha','z@z.com',2,NULL) -- 0 ile 150 arasında olmalı CK olmasına rağmen null eklenir
+
+ALTER TABLE tblPerson
+DROP CONSTRAINT CK_tblPerson_Age
+
+ALTER TABLE tblPerson
+ADD CONSTRAINT CK_tblPerson_Age CHECK (Age>0 AND Age<150)
+
+INSERT INTO tblPerson VALUES(16,'Zeki','z@z.com',1,950) --Hata
+
+
+
+
+
+--PART 7 ***************************************************************************
+
+/* Kimlik Sütunu (Identity Column), Microsoft SQL Server'da otomatik artan (auto-increment) değerler
+oluşturmak için kullanılan bir sütun türüdür.Primary Key (PK) ile sıkça kullanılır, ancak zorunlu değildir.
+Elle değer eklenemez (Varsayılan olarak SQL Server kendi yönetir).
+
+İlk parametre (seed) → Başlangıç değeri
+İkinci parametre (increment) → Kaç artacağını belirler
+
+Eğer belirli bir ID değeri elle eklemek istiyorsan:
+SET IDENTITY_INSERT Employees ON;→ Kimlik sütununa elle değer eklemeye izin verir.
+
+SET IDENTITY_INSERT Employees OFF;Daha sonra tekrar kapatılmalıdır (OFF).
+
+Eğer kimlik değerlerini sıfırlamak istersen:
+DBCC CHECKIDENT ('Employees', RESEED, 1);
+Sonraki eklenen kayıt 2 ile başlayacaktır (1 değil).
+*/
+
+
+
+SELECT * FROM tblPerson;
+
+
+
+
+
+
+
+
+
+
+
+--PART 8 ***************************************************************************
