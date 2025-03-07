@@ -377,3 +377,74 @@ INSERT INTO tblPerson VALUES
 
 
 SELECT * FROM tblPerson
+
+--DISTINCT ifadesi, sorgu sonucunda tekrarlanan satırları kaldırarak yalnızca benzersiz satırları döndürür.
+SELECT DISTINCT City FROM tblPerson--4 satır geldi
+SELECT DISTINCT Name, City FROM tblPerson--5 satır geldi.Name ve City sütunlarının birleşimi üzerinden
+--DISTINCT işlemi uygulanır.Yani, her bir Name-City çifti benzersiz olmalıdır. 
+
+SELECT * FROM tblPerson WHERE City = 'London'
+
+SELECT * FROM tblPerson WHERE City <> 'London'--Not equal
+SELECT * FROM tblPerson WHERE City != 'London'--Not equal
+
+/* 
+=	Eşit (Equal to)
+<>	Eşit değil (Not equal to)
+>	Büyüktür (Greater than)
+>=	Büyüktür veya eşit (Greater than or equal to)
+<	Küçüktür (Less than)
+<=	Küçüktür veya eşit (Less than or equal to)
+IN	Belirli değerler listesi (Specify a list of values)
+BETWEEN	Aralık belirtme (Specify a range)
+LIKE	Desen belirtme (Specify a pattern)
+
+Joker Karakterler
+%	Sıfır veya daha fazla karakter belirtir.
+_	Tek bir karakter belirtir.
+[]	Parantez içindeki herhangi bir karakteri belirtir.
+[^]	Parantez içindeki karakterler dışındaki herhangi bir karakteri belirtir.
+*/
+
+
+SELECT * FROM tblPerson WHERE Age=20 OR Age=23 OR Age=29
+
+SELECT * FROM tblPerson WHERE Age IN (20, 23, 29)
+
+SELECT * FROM tblPerson WHERE Age BETWEEN 20 AND 25
+
+SELECT * FROM tblPerson WHERE City LIKE 'L%' 
+
+INSERT INTO tblPerson VALUES (6,'Mary','mary.com',1,45,'London')
+
+SELECT * FROM tblPerson WHERE Email LIKE '%@%' 
+
+SELECT * FROM tblPerson WHERE Email NOT LIKE '%@%'
+
+INSERT INTO tblPerson VALUES
+(7, 'Ali', 'a@b.com', 1, 30, 'Ankara'),
+(8, 'Ayşe', 'c@d.com', 2, 28, 'İstanbul');
+
+SELECT * FROM tblPerson WHERE Email LIKE '_@_.com'
+
+SELECT * FROM tblPerson WHERE Name LIKE '[MST]%'
+
+SELECT * FROM tblPerson WHERE Name LIKE '[^MST]%'
+
+SELECT * FROM tblPerson WHERE (City= 'London' OR  City= 'Mumbai') AND Age>=25 
+
+SELECT * FROM tblPerson ORDER BY Name --default asc
+SELECT * FROM tblPerson ORDER BY Name DESC
+
+SELECT * FROM tblPerson ORDER BY Name DESC, Age ASC 
+--Önce Name sütununa göre azalan (DESC) sırayla sıralar
+--Aynı isimler varsa, bunları Age sütununa göre artan (ASC) sırayla sıralar
+
+SELECT TOP 4 * FROM tblPerson
+SELECT TOP 4 Name, Age FROM tblPerson
+SELECT TOP 50 PERCENT * FROM tblPerson
+
+--Yaşı en büyük
+SELECT TOP 1 * FROM tblPerson ORDER BY Age DESC
+
+
