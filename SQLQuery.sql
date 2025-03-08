@@ -357,7 +357,12 @@ DROP CONSTRAINT UQ_tblPerson_Email
 INSERT INTO tblPerson VALUES(2,'xyz','a@a.com',2,30)--Hata vermedi
 
 
+
+
+
+
 --PART 10 ***************************************************************************
+
 SELECT * FROM tblPerson
 SELECT * FROM tblGender
 
@@ -448,3 +453,153 @@ SELECT TOP 50 PERCENT * FROM tblPerson
 SELECT TOP 1 * FROM tblPerson ORDER BY Age DESC
 
 
+
+
+
+
+
+--PART 11 ***************************************************************************
+
+/* 1. Satırları Gruplama (GROUP BY)
+GROUP BY ifadesi, aynı değerlere sahip satırları bir grup halinde birleştirerek özet bilgiler 
+çıkarmak için kullanılır. Genellikle toplama (SUM), ortalama (AVG), en büyük (MAX), en küçük (MIN),
+sayma (COUNT) gibi fonksiyonlarla birlikte kullanılır.
+
+2. Grupları Filtreleme (HAVING)
+WHERE, satırları filtreler (gruplamadan önce).
+HAVING, oluşturulan grupları filtreler (gruplamadan sonra).
+HAVING, genellikle agregat (toplama) fonksiyonları ile birlikte kullanılır.
+
+3. WHERE ve HAVING Arasındaki Fark
+Kriter	               WHERE	              HAVING
+Ne zaman uygulanır?	 Gruplamadan önce	Gruplamadan sonra
+Hangi veriyi filtreler?	Tek tek satırları	Gruplanmış veriyi
+Agregat fonksiyonlarla kullanılabilir mi?	 Hayır	Evet
+
+WHERE ve HAVING ifadeleri arasındaki farklar:
+
+1.WHERE:
+SELECT, INSERT, UPDATE, ve DELETE gibi SQL komutları ile kullanılabilir. Yani, 
+verileri sorgularken veya güncellerken belirli koşulları filtrelemek için kullanılır.
+HAVING:
+Sadece SELECT sorgularında kullanılabilir. Özellikle gruplama (aggregate) işlemlerinden
+sonra grupları filtrelemek için kullanılır.
+
+2. WHERE:
+Satırları gruplamadan önce filtreler. Yani, veriler üzerinde işlem yapmadan önce koşul belirler.
+HAVING:
+Gruplama işleminden sonra filtreler. Toplama (aggregate) fonksiyonları ile birlikte kullanılarak 
+gruplar üzerinde koşul belirler.
+
+3.WHERE:
+Toplama fonksiyonları (örneğin, COUNT, SUM, AVG) kullanılamaz. Eğer kullanılacaksa, bu fonksiyonlar
+bir alt sorguda (subquery) yer almalıdır.
+HAVING:
+Toplama fonksiyonları ile birlikte kullanılabilir. Bu, gruplama işleminden sonra belirli koşulları 
+uygulamak için gereklidir.
+
+Sonuç
+GROUP BY → Satırları belirli bir sütuna göre gruplar.
+HAVING → Gruplara koşul ekleyerek filtreleme yapar.
+  */
+
+
+
+
+CREATE TABLE tblEmployee
+(
+ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+Name NVARCHAR(50),
+Gender NVARCHAR(10),
+Salary INT,
+City NVARCHAR(50)
+);
+
+DELETE FROM tblEmployee;
+DBCC CHECKIDENT(tblEmployee,RESEED,0)
+
+INSERT INTO tblEmployee(Name, Gender, Salary, City) VALUES 
+('Tom', 'Male', 4000, 'London')
+,('Pam', 'Female', 3000, 'New York')
+,('John', 'Male', 3500, 'London')
+,('Sam', 'Male', 4500, 'London')
+,('Todd', 'Male', 2800, 'Sydney')
+,('Ben', 'Male', 7000, 'New York')
+,('Sara', 'Female', 4800, 'Sydney')
+,('Valanie', 'Female', 5500, 'New York')
+,('James', 'Male', 6500, 'London')
+,('Russell', 'Male', 8800, 'London');
+
+
+
+
+SELECT SUM(Salary) FROM tblEmployee;
+
+SELECT MIN(Salary) FROM tblEmployee;
+
+SELECT MAX(Salary) FROM tblEmployee;
+
+SELECT * FROM tblEmployee;
+
+SELECT City, SUM(Salary) AS TotalSalary
+FROM tblEmployee
+GROUP BY City;
+
+
+
+SELECT City, Gender, SUM(Salary) AS TotalSalary
+FROM tblEmployee
+GROUP BY City;--Hata. Gender için ya aggregate func eklenmeli, ya da gender, group clause'e eklenmeli.
+
+SELECT * FROM tblEmployee;
+-- 1. yol
+SELECT City, Gender, SUM(Salary) AS TotalSalary
+FROM tblEmployee
+GROUP BY City, Gender
+ORDER BY City;
+
+--or
+
+-- 2. yol
+SELECT City, Gender, SUM(Salary) AS TotalSalary
+FROM tblEmployee
+GROUP BY Gender, City;
+
+-- 1 ve 2 aynı sonucu verir
+
+
+SELECT * FROM tblEmployee;
+
+SELECT City, Gender, SUM(Salary) AS TotalSalary, COUNT(ID) AS TotalEmployees--[Total Employees]
+FROM tblEmployee
+GROUP BY City, Gender
+ORDER BY City;
+
+SELECT * FROM tblEmployee;
+
+--Sadece erkekler (Filter Group clause)
+--1. yol
+SELECT Gender, City, SUM(Salary) AS TotalSalary, COUNT(ID) AS TotalEmployees
+FROM tblEmployee
+WHERE Gender = 'Male'
+GROUP BY City, Gender;
+
+--2. yol
+SELECT Gender, City, SUM(Salary) AS TotalSalary, COUNT(ID) AS TotalEmployees
+FROM tblEmployee
+GROUP BY City, Gender
+HAVING Gender = 'Male';
+
+-- Aggregation sadece WHERE ile kullanılamaz.
+SELECT * FROM tblEmployee WHERE SUM(Salary)>4000;--Hata
+
+-- Aggregation sadece HAVING ile kullanılabilir.
+SELECT Gender, City, SUM(Salary) AS TotalSalary, COUNT(ID) AS TotalEmployees
+FROM tblEmployee
+GROUP BY City, Gender
+HAVING SUM(Salary)>5000;
+
+
+
+
+--PART 12 ***************************************************************************
