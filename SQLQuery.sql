@@ -603,3 +603,195 @@ HAVING SUM(Salary)>5000;
 
 
 --PART 12 ***************************************************************************
+
+
+CREATE TABLE tblDepartment
+(
+     ID INT PRIMARY KEY,
+     DepartmentName NVARCHAR(50),
+     Location NVARCHAR(50),
+     DepartmentHead NVARCHAR(50)
+);
+
+
+INSERT INTO tblDepartment VALUES
+(1, 'IT', 'London', 'Rick'),
+(2, 'Payroll', 'Delhi', 'Ron'),
+(3, 'HR', 'New York', 'Christie'),
+(4, 'Other Department', 'Sydney', 'Cindrella');
+
+
+
+
+CREATE TABLE tblEmployees
+(
+     ID INT PRIMARY KEY,
+     Name NVARCHAR(50),
+     Gender NVARCHAR(50),
+     Salary INT,
+     DepartmentId INT FOREIGN KEY REFERENCES tblDepartment(ID)
+);
+
+
+
+INSERT INTO tblEmployees VALUES
+(1, 'Tom', 'Male', 4000, 1),
+(2, 'Pam', 'Female', 3000, 3),
+(3, 'John', 'Male', 3500, 1),
+(4, 'Sam', 'Male', 4500, 2),
+(5, 'Todd', 'Male', 2800, 2),
+(6, 'Ben', 'Male', 7000, 1),
+(7, 'Sara', 'Female', 4800, 3),
+(8, 'Valarie', 'Female', 5500, 1),
+(9, 'James', 'Male', 6500, NULL),
+(10, 'Russell', 'Male', 8800, NULL);
+
+
+
+
+--inner join/join
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees 
+INNER JOIN tblDepartment --JOIN
+ON tblEmployees.DepartmentId=tblDepartment.ID;
+
+SELECT * FROM tblEmployees;
+SELECT * FROM tblDepartment;
+
+
+/* LEFT JOIN tblDepartment
+tblEmployees tablosundaki tüm kayıtları getirir.
+tblDepartment tablosuyla DepartmentId = ID eşleşmesi yapar.
+Eğer eşleşme bulunamazsa, tblDepartment tarafındaki sütunlar NULL olur.*/
+--left outer join/left join
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees 
+LEFT JOIN tblDepartment --LEFT OUTER JOIN
+ON tblEmployees.DepartmentId=tblDepartment.ID;
+
+
+SELECT * FROM tblEmployees;
+SELECT * FROM tblDepartment;
+
+
+/* RIGHT JOIN kullanıldığında, sağdaki (RIGHT) tabloyu yani tblDepartment tablosunu tamamen korur.
+Eşleşen tblEmployees kayıtlarını getirir, ancak eşleşme yoksa tblEmployees sütunları NULL olur.*/
+--right outer join/right join
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees 
+RIGHT JOIN tblDepartment --RIGHT OUTER JOIN
+ON tblEmployees.DepartmentId=tblDepartment.ID;
+
+
+--full outer join/full join
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees 
+FULL JOIN tblDepartment --FULL OUTER JOIN
+ON tblEmployees.DepartmentId=tblDepartment.ID;
+
+
+--cross join
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees 
+CROSS JOIN tblDepartment;
+
+
+/* Kartezyen Çarpım (Cartesian Product), iki kümenin tüm elemanlarının birbirleriyle
+eşleşmesi sonucu oluşan yeni bir kümedir.CROSS JOIN, SQL'de iki tablonun her satırını
+diğer tablodaki tüm satırlarla birleştiren bir işlem türüdür.
+Kartezyen Çarpım = İki kümenin her elemanının diğer kümenin her elemanıyla eşleşmesi
+CROSS JOIN = SQL'de iki tablonun her satırının birbirleriyle eşleşmesi
+Sonuç Kümesi = İlk tablodaki satır sayısı × İkinci tablodaki satır sayısı
+Genellikle filtre (WHERE) eklenmezse çok büyük ve gereksiz veri üretebilir!*/
+
+
+
+-- ***************************************************************************
+-- Advanced or intelligent joins in sql server - Part 13
+
+
+SELECT * FROM tblEmployees;
+SELECT * FROM tblDepartment;
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees
+LEFT JOIN tblDepartment
+ON tblEmployees.DepartmentId=tblDepartment.ID
+WHERE tblDepartment.ID IS NULL;
+
+
+
+
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees
+RIGHT JOIN tblDepartment
+ON tblEmployees.DepartmentId=tblDepartment.ID
+WHERE tblEmployees.DepartmentId IS NULL;
+
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployees
+FULL JOIN tblDepartment
+ON tblEmployees.DepartmentId=tblDepartment.ID
+WHERE tblEmployees.DepartmentId IS NULL OR
+      tblDepartment.ID IS NULL;
+
+
+
+
+-- ***************************************************************************
+-- Self join in sql server - Part 14
+
+DROP TABLE tblEmployees;
+
+DROP TABLE tblEmployee;
+
+CREATE TABLE tblEmployees
+(
+     EmployeeId INT PRIMARY KEY,
+     Name NVARCHAR(50),
+     ManagerId INT
+);
+
+
+
+INSERT INTO tblEmployees VALUES
+(1, 'Mike', 3),
+(2, 'Rob', 1),
+(3, 'Todd', NULL),
+(4, 'Ben', 1),
+(5, 'Samm', 1);
+
+SELECT * FROM tblEmployees;
+-- En çok kullanılan
+SELECT E.Name Employee, M.Name Manager
+FROM tblEmployees E
+JOIN tblEmployees M
+ON E.ManagerId=M.EmployeeId;
+
+-- Çok kullanılan
+SELECT E.Name AS Employee, M.Name AS Manager
+FROM tblEmployees AS E
+LEFT JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+-- Nadir kullanılır
+SELECT E.Name AS Employee, M.Name AS Manager
+FROM tblEmployees AS E
+RIGHT JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+-- Nadir kullanılır
+SELECT E.Name AS Employee, M.Name AS Manager
+FROM tblEmployees AS E
+FULL JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+SELECT E.Name AS Employee, M.Name AS Manager
+FROM tblEmployees AS E
+CROSS JOIN tblEmployees AS M;
+
