@@ -125,7 +125,7 @@ DELETE FROM tblGender WHERE ID=1
 
 --PART 6 ***************************************************************************
 
-/*Check kısıtlaması, SQL Server'da bir sütuna girebilecek değerlerin aralığını
+/*Check kısıtlaması, bir sütuna girebilecek değerlerin aralığını
 sınırlamak için kullanılır. Bu, veritabanındaki verilerin doğruluğunu ve tutarlılığını
 sağlamak amacıyla yapılır.*/
 
@@ -144,12 +144,13 @@ INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,-996)
 
 DELETE FROM tblPerson WHERE ID=14
 
---Constrainti ekledik
+--Constrainti ekledik, 0 ile 150 arasında olmalı 
 INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,-996) --Hata
 
 INSERT INTO tblPerson VALUES(14,'Zeliha','z@z.com',2,25)
 
-INSERT INTO tblPerson VALUES(15,'Züleyha','z@z.com',2,NULL) -- 0 ile 150 arasında olmalı CK olmasına rağmen null eklenir
+INSERT INTO tblPerson VALUES(15,'Züleyha','z@z.com',2,NULL) -- 0 ile 150 arasında olmalı 
+--CK olmasına rağmen null eklenir
 
 ALTER TABLE tblPerson
 DROP CONSTRAINT CK_tblPerson_Age
@@ -165,17 +166,18 @@ INSERT INTO tblPerson VALUES(16,'Zeki','z@z.com',1,950) --Hata
 
 --PART 7 ***************************************************************************
 
-/* Kimlik Sütunu (Identity Column), Microsoft SQL Server'da otomatik artan (auto-increment) değerler
-oluşturmak için kullanılan bir sütun türüdür.Primary Key (PK) ile sıkça kullanılır, ancak zorunlu değildir.
+/* Kimlik Sütunu (Identity Column),otomatik artan (auto-increment) değerler
+oluşturmak için kullanılan bir sütun türüdür.Primary Key (PK) ile sıkça kullanılır, ancak
+zorunlu değildir.
 Elle değer eklenemez (Varsayılan olarak SQL Server kendi yönetir).
 
-İlk parametre (seed) → Başlangıç değeri
-İkinci parametre (increment) → Kaç artacağını belirler
+İlk parametre (seed): Başlangıç değeri
+İkinci parametre (increment): Kaç artacağını belirler
 
 Eğer belirli bir ID değeri elle eklemek istiyorsan:
-SET IDENTITY_INSERT Employees ON;→ Kimlik sütununa elle değer eklemeye izin verir.
+SET IDENTITY_INSERT Employees ON: Kimlik sütununa elle değer eklemeye izin verir.
 
-SET IDENTITY_INSERT Employees OFF;Daha sonra tekrar kapatılmalıdır (OFF).
+SET IDENTITY_INSERT Employees OFF: Daha sonra tekrar kapatılmalıdır (OFF).
 
 Eğer kimlik değerlerini sıfırlamak istersen:
 DBCC CHECKIDENT ('Employees', RESEED, 1);
@@ -193,11 +195,11 @@ DELETE FROM tblPerson1  WHERE PersonId = 1
 
 INSERT INTO tblPerson1 VALUES('Can')
 
-INSERT INTO tblPerson1 VALUES(1,'Nur')--Hata
+INSERT INTO tblPerson1 VALUES(1,'Nuri')--Hata
 
 SET IDENTITY_INSERT tblPerson1 ON
 
-INSERT INTO tblPerson1 (PersonId,Name) VALUES(1,'Nur')
+INSERT INTO tblPerson1 (PersonId,Name) VALUES(1,'Nuri')
 
 INSERT INTO tblPerson1  VALUES('Ayşe')--Hata
 
@@ -215,7 +217,7 @@ DELETE FROM tblPerson1
 
 DBCC CHECKIDENT(tblPerson1,RESEED,0)
 
-INSERT INTO tblPerson1  VALUES('Ayşe')--1'de n başladı
+INSERT INTO tblPerson1  VALUES('Ayşe')--1'den başladı
 
 
 
@@ -242,9 +244,9 @@ Aynı işlem kapsamında (scope) oluşturulan son kimlik değerini döndürür.E
 çünkü sadece mevcut oturumda (session) ve aynı işlem içinde (scope) oluşturulan değeri getirir.
 
 2. @@IDENTITY değişkeni, mevcut oturumda en son oluşturulan kimlik sütunu değerini döndürür, ancak bu 
-değer farklı kapsamları (scope) da içerebilir. @@IDENTITY, çağrıldığı yerden bağımsız olarak en son kimlik
-değerini döndürür. Ancak, bu değer, bir tetikleyici (trigger) veya başka bir işlemle değişmiş olabilir, 
-bu yüzden dikkatli kullanılmalıdır.
+değer farklı kapsamları (scope) da içerebilir. 
+@@IDENTITY, çağrıldığı yerden bağımsız olarak en son kimlikdeğerini döndürür. Ancak, bu değer, bir 
+tetikleyici (trigger) veya başka bir işlemle değişmiş olabilir, bu yüzden dikkatli kullanılmalıdır.
 
 Son eklenen kimlik değerini döndürür, ancak tüm oturum için geçerlidir.Tetikleyiciler (TRIGGER) varsa,
 yanlış değer dönebilir! Eğer tabloda tetikleyici (TRIGGER) varsa, farklı bir tablodaki kimlik değerini döndürebilir!
@@ -328,9 +330,10 @@ SELECT IDENT_CURRENT('Test2')
 --PART 9 ***************************************************************************
 
 /* UNIQUE Constraint, bir tablodaki belirli bir sütundaki veya sütun grubundaki değerlerin
-tekrar etmesini engelleyen bir kısıtlamadır. Birincil Anahtar (PRIMARY KEY) gibi çalışır, ancak farklı olarak:
-Bir tabloda birden fazla UNIQUE kısıtlaması olabilir.
-NULL değerlerine izin verebilir (ancak genellikle sadece bir tane NULL kabul eder).
+tekrar etmesini engelleyen bir kısıtlamadır. Birincil Anahtar (PRIMARY KEY) gibi çalışır, 
+ancak farklı olarak:
+- Bir tabloda birden fazla UNIQUE kısıtlaması olabilir.
+- NULL değerlerine izin verebilir (ancak genellikle sadece bir tane NULL kabul eder).
 */
 
 
@@ -795,3 +798,302 @@ SELECT E.Name AS Employee, M.Name AS Manager
 FROM tblEmployees AS E
 CROSS JOIN tblEmployees AS M;
 
+
+
+
+-- ***************************************************************************
+-- Different ways to replace NULL in sql server - Part 15
+
+
+/* ISNULL():Tek Alternatif Değer Belirleme (Sadece SQL Server)
+Eğer verilen sütun NULL ise, yerine belirlenen bir varsayılan değeri döndürür.
+
+COALESCE():İlk NULL Olmayan Değeri Döndürme
+Birden fazla sütun veya sabit değer alabilir.
+Sırayla bakar, NULL olmayan ilk değeri döndürür.
+
+CASE:NULL Değerleri Koşula Göre Yönetme
+NULL olup olmadığını kontrol etmek için kullanılabilir.
+Farklı NULL durumlarına göre farklı değerler döndürebilir.
+CASE 
+     WHEN ... THEN ...
+     WHEN ... THEN ...
+     ELSE ...
+END 
+*/
+
+USE [Sample]
+GO
+
+SELECT ISNULL(NULL,'No Manager')
+SELECT ISNULL(NULL,'No Manager') AS MANAGER
+SELECT ISNULL('Pragim','No Manager') AS MANAGER
+
+SELECT E.Name AS Employee, ISNULL(M.Name,'No Manager') AS Manager
+FROM tblEmployees AS E
+LEFT JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+SELECT COALESCE(NULL,'No Manager')
+SELECT COALESCE('Pragim','No Manager')
+SELECT COALESCE('Pragim','No Manager') AS Manager
+
+SELECT E.Name AS Employee, COALESCE(M.Name,'No Manager') AS Manager
+FROM tblEmployees AS E
+LEFT JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+SELECT E.Name AS Employee, 
+CASE 
+    WHEN M.Name IS NULL THEN 'No Manager'
+	ELSE M.Name 
+END
+AS Manager
+FROM tblEmployees AS E
+LEFT JOIN tblEmployees AS M
+ON E.ManagerId=M.EmployeeId;
+
+
+
+-- ***************************************************************************
+-- Coalesce function in sql server Part 16
+
+
+/* COALESCE() returns the first Non NULL value.*/
+
+DROP TABLE tblEmployees;
+
+CREATE TABLE tblEmployees
+(
+     Id INT PRIMARY KEY,
+     FirstName NVARCHAR(50),
+	 MiddleName NVARCHAR(50),
+	 LastName NVARCHAR(50),
+);
+
+
+
+INSERT INTO tblEmployees VALUES
+(1, 'Sam', NULL, NULL),
+(2, NULL,'Todd', 'Tanzan'),
+(3, NULL, NULL, 'Sara'),
+(4, 'Ben', 'Parker', NULL),
+(5, 'James', 'Nick', 'Nancy');
+
+SELECT * FROM tblEmployees;
+
+
+SELECT Id,COALESCE(FirstName,MiddleName,LastName) AS Name
+FROM tblEmployees;
+
+
+
+
+-- ***************************************************************************
+-- Union and union all in sql server Part 17
+
+/*UNION ve UNION ALL:Satırları Birleştirir
+
+UNION: İki veya daha fazla sorgunun sonucunu birleştirir.
+JOIN gibi tabloları sütunlara göre bağlamaz, sadece satırları alt alta ekler.
+Birleştirilen sorguların sütun sayısı ve veri türleri aynı olmalıdır.
+
+Tekrar Eden Satırları Kaldırır (Distinct)
+Aynı satır birden fazla kez varsa, tekrarlanan kayıtları kaldırır (DISTINCT gibi davranır).
+
+UNION ALL:Tekrar Eden Satırları da Gösterir
+UNION’dan farkı: Tekrar eden satırları kaldırmaz.
+Daha hızlı çalışır çünkü DISTINCT hesaplaması yapmaz.
+
+
+JOIN: Sütunları Birleştirir
+Farklı tablolardaki ilişkili verileri birleştirir.
+Tabloların ortak bir sütununa göre bağlanması gerekir.
+*/
+
+
+CREATE TABLE tblIndiaCustomers
+(
+     Id INT PRIMARY KEY,
+     Name NVARCHAR(50),
+	 Email NVARCHAR(50),
+);
+
+
+
+INSERT INTO tblIndiaCustomers VALUES
+(1, 'Raj', 'R@R.com'),
+(2, 'Sam', 'S@S.com');
+
+
+CREATE TABLE tblUKCustomers
+(
+     Id INT PRIMARY KEY,
+     Name NVARCHAR(50),
+	 Email NVARCHAR(50),
+);
+
+
+
+INSERT INTO tblUKCustomers VALUES
+(1, 'Ben', 'B@B.com'),
+(2, 'Sam', 'S@S.com');
+
+
+SELECT * FROM tblIndiaCustomers;
+SELECT * FROM tblUKCustomers;
+
+SELECT Id, Name FROM tblIndiaCustomers
+UNION ALL
+SELECT Id, Name, Email FROM tblUKCustomers;--Error
+
+SELECT  Name, Email, Id FROM tblIndiaCustomers
+UNION ALL
+SELECT Id, Name, Email FROM tblUKCustomers;--Error
+
+SELECT * FROM tblIndiaCustomers
+UNION ALL
+SELECT * FROM tblUKCustomers;
+
+SELECT * FROM tblIndiaCustomers
+UNION 
+SELECT * FROM tblUKCustomers;
+
+
+SELECT * FROM tblIndiaCustomers
+ORDER BY Name
+UNION ALL
+SELECT * FROM tblUKCustomers;-- Error
+
+
+SELECT * FROM tblIndiaCustomers
+UNION ALL
+SELECT * FROM tblUKCustomers
+ORDER BY Name;
+
+SELECT * FROM tblIndiaCustomers
+UNION ALL
+SELECT * FROM tblUKCustomers
+UNION ALL
+SELECT * FROM tblUKCustomers
+UNION ALL
+SELECT * FROM tblIndiaCustomers
+ORDER BY Name;
+
+
+
+
+-- ***************************************************************************
+-- Stored procedures in sql server Part 18
+
+
+/*
+Saklı prosedür (Stored Procedure), SQL Server'da bir veya daha fazla SQL komutunu
+içeren ve tekrar tekrar çalıştırılabilen önceden derlenmiş (compiled) bir kod bloğudur.
+Avantajları:
+Kod Tekrarını Önler: Aynı sorguları tekrar tekrar yazmaya gerek kalmaz.
+Performans Artışı: Önceden derlendiği için daha hızlı çalışır.
+Güvenlik Sağlar: Parametreli yapısı sayesinde SQL Injection saldırılarına karşı daha güvenlidir.
+Bakımı Kolaydır: Tek bir yerde değişiklik yaparak birden fazla kullanım noktasında güncelleme sağlar.
+
+Mevcut bir saklı prosedürü değiştirmek için ALTER PROCEDURE kullanılır.
+
+Mevcut bir saklı prosedürün kodunu/tanımını görmek için sp_helptext sistem saklı prosedürü kullanılır.
+
+Mevcut bir saklı prosedürü silmek için DROP PROCEDURE kullanılır.
+
+Saklı prosedürlerin kodlarını şifrelemek için WITH ENCRYPTION 
+kullanılır. Bu, prosedürün içeriğini şifreleyerek, doğrudan görüntülenmesini engeller. sp_helptext 
+spGetEmployees_Encrypted kullanılırsa hata alınır. sp_helptext ve sys.sql_modules ile içerik görülemez.
+*/
+
+USE [Sample]
+GO
+
+DROP TABLE tblEmployees;
+
+CREATE TABLE tblEmployees (
+    Id INT PRIMARY KEY,
+    Name NVARCHAR(50),
+    Gender NVARCHAR(10),
+    DepartmentId INT
+);
+
+
+INSERT INTO tblEmployees (Id, Name, Gender, DepartmentId) VALUES 
+(1, 'Sam', 'Male', 1),
+(2, 'Ram', 'Male', 1),
+(3, 'Sara', 'Female', 3),
+(4, 'Todd', 'Male', 2),
+(5, 'John', 'Male', 3),
+(6, 'Sana', 'Female', 2),
+(7, 'James', 'Male', 1),
+(8, 'Rob', 'Male', 2),
+(9, 'Steve', 'Male', 1),
+(10, 'Pam', 'Female', 2);
+
+
+CREATE PROCEDURE spGetEmployees -- CREATE PROC
+AS
+BEGIN
+     SELECT Name, Gender FROM tblEmployees
+END;
+
+spGetEmployees--highlight, then execute
+
+EXEC spGetEmployees;
+
+EXECUTE spGetEmployees;
+
+ SELECT * FROM tblEmployees;
+
+
+CREATE PROCEDURE spGetEmployeesByGenderAndDepartment
+@Gender NVARCHAR(20),
+@DepartmentId INT
+AS
+BEGIN
+     SELECT Name, Gender, DepartmentId FROM tblEmployees 
+	 WHERE Gender = @Gender AND DepartmentId = @DepartmentId
+END;
+
+spGetEmployeesByGenderAndDepartment; --Error: ...expects parameter '@Gender', which was not supplied
+spGetEmployeesByGenderAndDepartment 1, 'Male';-- Error: ...converting data type varchar to int
+spGetEmployeesByGenderAndDepartment @DepartmentId = 1, @Gender='Male';
+spGetEmployeesByGenderAndDepartment 'Male', 1;
+
+
+sp_helptext spGetEmployees; /*CREATE PROCEDURE spGetEmployees 
+                              AS 
+							  BEGIN      
+							  SELECT Name, Gender FROM tblEmployees 
+							  END;*/
+
+
+ALTER PROCEDURE spGetEmployees 
+AS
+BEGIN
+     SELECT Name, Gender FROM tblEmployees
+	 ORDER BY Name
+END;
+
+spGetEmployees;
+
+DROP PROC spGetEmployees;
+
+--To encrypt the text of the SP, use WITH ENCRYPTION option.
+ALTER PROC spGetEmployeesByGenderAndDepartment
+@Gender NVARCHAR(20),
+@DepartmentId INT
+WITH ENCRYPTION
+AS
+BEGIN
+     SELECT Name, Gender, @DepartmentId 
+	 FROM tblEmployees
+	 WHERE Gender = @Gender AND DepartmentId = @DepartmentId
+END;
+
+sp_helptext spGetEmployeesByGenderAndDepartment;--The text for object 'spGetEmployeesByGenderAndDepartment'
+--is encrypted.
