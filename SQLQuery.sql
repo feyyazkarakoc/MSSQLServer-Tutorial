@@ -594,7 +594,7 @@ GROUP BY City, Gender
 HAVING Gender = 'Male';
 
 -- Aggregation sadece WHERE ile kullanılamaz.
-SELECT * FROM tblEmployee WHERE SUM(Salary)>4000;--Hata
+SELECT * FROM tblEmployee WHERE SUM(Salary)>5000;--Hata
 
 -- Aggregation sadece HAVING ile kullanılabilir.
 SELECT Gender, City, SUM(Salary) AS TotalSalary, COUNT(ID) AS TotalEmployees
@@ -1047,7 +1047,7 @@ EXEC spGetEmployees;
 
 EXECUTE spGetEmployees;
 
- SELECT * FROM tblEmployees;
+SELECT * FROM tblEmployees;
 
 
 CREATE PROCEDURE spGetEmployeesByGenderAndDepartment
@@ -1097,3 +1097,190 @@ END;
 
 sp_helptext spGetEmployeesByGenderAndDepartment;--The text for object 'spGetEmployeesByGenderAndDepartment'
 --is encrypted.
+
+
+
+
+
+-- ***************************************************************************
+-- Stored procedures with output parameters Part 19
+
+
+/*Stored Procedure’ler sadece veri getirmek için değil, bir değer döndürmek için de kullanılabilir.
+Çıktı parametreleri (OUTPUT) kullanarak, bir prosedür içinde hesaplanan veya değiştirilen bir değeri
+dışarıya aktarabiliriz.
+
+Stored Procedure çağırırken, OUTPUT parametresini bir değişkende saklamamız gerekir.
+DECLARE @AvgSal DECIMAL(10,2);  -- Çıktı değerini saklayacak değişken
+
+OUTPUT Parametreleri Nerede Kullanılır?
+Bir prosedürün döndürdüğü tek bir değeri almak için (SUM, AVG, MAX, COUNT)
+Birden fazla sonucu aynı anda almak için (örneğin min/max maaş)
+Bir işlemin sonucunu dışarıya aktarmak için (örneğin kayıt başarılı mı?)
+
+SONUÇ
+1️.OUTPUT parametreleri, prosedürün dışına veri aktarmak için kullanılır.
+2️.Değişken tanımlanmalı (DECLARE @var) ve OUTPUT ile çağrılmalı.
+3️.Tek veya birden fazla değer döndürebilir.
+*/
+
+
+DROP TABLE tblEmployees;
+
+CREATE TABLE tblEmployees (
+    Id INT PRIMARY KEY,
+    Name NVARCHAR(50),
+    Gender NVARCHAR(10),
+    DepartmentId INT
+);
+
+
+INSERT INTO tblEmployees(Id, Name, Gender, DepartmentId) VALUES 
+(1, 'Sam', 'Male', 1),
+(2, 'Ram', 'Male', 1),
+(3, 'Sara', 'Female', 3),
+(4, 'Todd', 'Male', 2),
+(5, 'John', 'Male', 3),
+(6, 'Sana', 'Female', 2),
+(7, 'James', 'Male', 1),
+(8, 'Rob', 'Male', 1),
+(9, 'Steve', 'Male', 1),
+(10, 'Pam', 'Female', 2);
+
+
+
+CREATE PROCEDURE spGetEmployeeCountByGender
+@Gender NVARCHAR(20),
+@EmployeeCount INT OUTPUT
+AS
+BEGIN
+     SELECT @EmployeeCount = COUNT(Id) 
+     FROM tblEmployees 
+     WHERE Gender = @Gender
+End
+
+
+DECLARE @EmployeeTotal INT
+EXECUTE spGetEmployeeCountByGender 'Male', @EmployeeTotal OUTPUT --If you don't specify the OUTPUT keyword,
+--when executing the stored procedure, the @EmployeeTotal variable will be NULL.
+PRINT @EmployeeTotal
+
+-- You can pass parameters in any order, when you use the parameter names. 
+DECLARE @EmployeeTotal INT
+EXECUTE spGetEmployeeCountByGender @EmployeeCount = @EmployeeTotal OUTPUT, @Gender = 'Male'
+PRINT @EmployeeTotal
+
+
+--The following system stored procedures, are extremely useful when working procedures.
+
+sp_help spGetEmployeeCountByGender /*View the information about the stored procedure, like parameter
+names, their datatypes etc. sp_help can be used with any database object, like tables, views, SP's, 
+triggers etc. Alternatively, you can also press ALT+F1, when the name of the object is highlighted.*/
+
+
+sp_helptext spGetEmployeeCountByGender -- View the Text of the stored procedure
+
+sp_depends spGetEmployeeCountByGender /*View the dependencies of the stored procedure. This system 
+SP is very useful, especially if you want to check, if there are any stored procedures that are 
+referencing a table that you are abput to drop. sp_depends can also be used with other database 
+objects like table etc.*/
+
+-- Note: All parameter and variable names in SQL server, need to have the @symbol.
+
+
+-- ***************************************************************************
+-- Stored procedure output parameters or return values Part 20
+
+
+
+CREATE PROC spGetNameById
+@Id INT,
+@Name NVARCHAR(20) OUTPUT
+AS
+BEGIN
+     SELECT Name
+	 FROM tblEmployees
+	 WHERE Id = @Id
+END
+
+
+--****************************************
+
+CREATE PROCEDURE spGetTotalCount1
+    @TotalCount INT OUTPUT
+AS
+BEGIN
+    SELECT @TotalCount = COUNT(Id) FROM tblEmployees;
+END;
+
+
+
+DECLARE @Total1 INT;
+EXEC spGetTotalCount1 @Total1 OUTPUT;
+PRINT @Total1;  -- Çalışan sayısını ekrana yazdırır.
+
+
+
+CREATE PROCEDURE spGetTotalCount2
+AS
+BEGIN
+     RETURN (SELECT COUNT(Id) FROM tblEmployees);
+END;
+
+
+DECLARE @Total2 INT;
+EXECUTE @Total2 = spGetTotalCount2;
+PRINT @Total2;
+
+--*********************************
+
+CREATE PROC spGetNameById1
+@Id INT,
+@Name NVARCHAR(20) OUTPUT--return sadece integer döndürürken output'ta data type esnekliği var, istediğimizi yazabiliriz
+AS
+BEGIN 
+     SELECT @Name = Name 
+	 FROM tblEmployees 
+	 WHERE Id = @Id;
+END;
+
+DECLARE @Name NVARCHAR(20)
+EXECUTE spGetNameById1 1,@Name OUTPUT--OUT
+PRINT 'Name = '+@Name
+
+
+
+CREATE PROC spGetNameById2
+@Id INT
+AS
+BEGIN 
+     RETURN (SELECT Name 
+	 FROM tblEmployees 
+	 WHERE Id = @Id);
+END;
+
+DECLARE @Name NVARCHAR(20);
+EXECUTE @Name = spGetNameById2 1;
+PRINT 'Name = '+@Name;--HATA return sadece INTEGER döndürür
+
+
+/*OUTPUT Parametre Kullanımı
+Bu yöntem bir "referans" yöntemiyle değer döndürme işlemidir.
+Stored Procedure bir değer döndürmez, OUTPUT parametresine değeri aktarır.
+
+RETURN Kullanımı
+SQL Server’da RETURN yalnızca bir INTEGER döndürebilir.
+Fonksiyon gibi çalışır, doğrudan bir değer döndürür.
+
+Farkları Nelerdir?
+Özellik	                      OUTPUT Parametre	                                    RETURN Kullanımı 
+Dönen Değer	        Bir değişkeni günceller ve dışarı aktarır.	                  Doğrudan bir INTEGER döndürür.
+RETURN Veri Tipi	Herhangi bir veri tipi olabilir (INT, VARCHAR, DECIMAL, vs.)  Sadece INT döndürebilir!
+Birden Fazla Değer  Evet, birden fazla OUTPUT parametresi olabilir.	        Hayır, sadece tek bir INT döndürebilir.
+Fonksiyon Gibi Kullanılabilir mi?	 Hayır	                                  Evet (Ama sadece INT döndürür.)
+
+
+SONUÇ
+OUTPUT kullanımı daha esnek, çünkü her türlü veri tipini döndürebilir ve birden fazla değeri döndürebilir.
+RETURN kullanımı daha basittir ama sadece INT döndürebilir ve tek bir değer döndürebilir.
+*/
