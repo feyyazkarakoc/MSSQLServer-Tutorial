@@ -1188,6 +1188,9 @@ objects like table etc.*/
 -- Note: All parameter and variable names in SQL server, need to have the @symbol.
 
 
+
+
+
 -- ***************************************************************************
 -- Stored procedure output parameters or return values Part 20
 
@@ -1284,3 +1287,205 @@ SONUÇ
 OUTPUT kullanımı daha esnek, çünkü her türlü veri tipini döndürebilir ve birden fazla değeri döndürebilir.
 RETURN kullanımı daha basittir ama sadece INT döndürebilir ve tek bir değer döndürebilir.
 */
+
+
+
+
+
+
+
+
+-- ***************************************************************************
+-- Advantages of stored procedures Part 21
+
+/*1. Execution plan retention and reusability - Stored Procedures are compiled and their execution 
+plan is cached and used again, when the same SP is executed again. Although adhoc queries also create
+and reuse plan, the plan is reused only when the query is textual match and the datatypes are matching
+with the previous call. Any change in the datatype or you have an extra space in the query then, a new
+plan is created.
+
+2. Reduces network traffic - You only need to send, EXECUTE SP_Name statement, over the network, instead
+of the entire batch of adhoc SQL code.
+
+3. Code reusability and better maintainability - A stored procedure can be reused with multiple applications.
+If the logic has to change, we only have one place to change, where as if it is inline sql, and if you have 
+to use it in multiple applications, we end up with multiple copies of this inline sql. If the logic has to 
+change, we have to change at all the places, which makes it harder maintaining inline sql.
+
+4. Better Security - A database user can be granted access to an SP and prevent them from executing direct
+"select" statements against a table.  This is fine grain access control which will help control what data
+a user has access to.
+
+5. Avoids SQL Injection attack - SP's prevent sql injection attack*/
+
+
+/*Ad Hoc Query, veritabanında önceden tanımlanmamış, anlık olarak çalıştırılan bir SQL sorgusudur.
+Sadece o an için yazılır ve tekrar kullanılmaz.
+Sorgu sadece bir kere çalıştırılmak için yazılmışsa, bir "ad hoc query"dir.
+Ancak Stored Procedure veya View olarak kaydedilirse, artık "ad hoc" olmaktan çıkar.*/
+
+--Ad Hoc Query
+SELECT Name FROM tblEmployees WHERE Id = 1;--Bunu 2. defa çalıştırdığımda execution plan çalıştırılır.
+SELECT Name FROM tblEmployees WHERE Id = 2;--Ama id değiştiğinde veya bir space eklediğimizde yeni plan üretilir.
+
+--Bunu SP ile yapalım
+
+DROP PROC spGetNameById;
+
+
+CREATE PROC spGetNameById
+@Id INT
+AS
+BEGIN
+     SELECT Name
+	 FROM tblEmployees
+	 WHERE Id = @Id
+END
+
+
+/*Saklı prosedür ilk kez oluşturulduğunda, veritabanı motoru tarafından derlenir.
+Derleme aşamasından sonra, veritabanı motoru, prosedürün nasıl çalışacağını belirlemek için bir icra planı
+oluşturur. Derlendikten ve icra planı oluşturulduktan sonra, saklı prosedür veritabanında saklanır. Saklı 
+prosedür çağrıldığında, veritabanı motoru daha önce oluşturmuş olduğu icra planını kullanarak prosedürü 
+çalıştırır. */
+EXEC spGetNameById 1;
+EXEC spGetNameById 2;--Parametre değişse bile aynı execution plan kullanılır.
+
+/*
+1️.İcra Planı Saklama (Execution Plan Caching)
+Stored Procedure’ler önceden derlenir ve SQL Server tarafından önbelleğe alınır.
+Bu sayede tekrar çalıştırıldığında sorgu planı yeniden hesaplanmaz, daha hızlı çalışır.
+Stored Procedure tekrar çağrıldığında, SQL Server önceden oluşturulmuş icra planını kullanır,
+böylece performans artar.
+
+2️. Ağ Trafiğini Azaltma
+Stored Procedure kullanarak istemci ile sunucu arasındaki veri trafiğini azaltabiliriz.
+SQL kodunu istemciden göndermek yerine, sadece EXEC komutu gönderilir, SQL Server içindeki
+prosedür çalıştırılır. Böylece ağ trafiği azalır, büyük SQL sorgularını istemciden sunucuya
+her seferinde göndermek gerekmez.
+
+3️. Kodun Yeniden Kullanılabilirliği (Code Reusability)
+Stored Procedure’ler, tekrar tekrar kullanılabilen SQL kod bloklarıdır.
+Kod tekrarını önler ve yönetimi kolaylaştırır.
+Bir prosedürü her seferinde yazmak yerine EXEC komutuyla tekrar tekrar çağırabiliriz.
+
+4️. Güvenliği Artırma
+Stored Procedure kullanarak veritabanı üzerinde daha iyi erişim kontrolü sağlayabiliriz.
+Kullanıcılara doğrudan tablo erişimi vermek yerine, sadece belirli prosedürleri çalıştırma yetkisi verilebilir.
+
+5️. SQL Enjeksiyon (SQL Injection) Saldırılarına Karşı Koruma
+Stored Procedure kullanarak SQL Injection saldırılarını büyük ölçüde önleyebiliriz.
+Parametrik sorgular sayesinde zararlı SQL kodlarının çalıştırılması engellenir.*/
+
+
+
+
+
+-- ***************************************************************************
+--Built in string functions in sql server 2008 Part 22
+
+
+/* DECLARE, SQL Server'da bir değişken tanımlamak için kullanılır.
+Değişkenin veri tipini belirtmek zorundayız.
+
+SET, SQL Server'da bir değişkene değer atamak için kullanılır.
+Birden fazla değişken aynı anda SET ile atanamaz!
+Alternatif olarak SELECT ile de atama yapılabilir:
+Ancak SELECT, SET'e göre daha esnektir, çünkü birden fazla değişkene aynı anda değer atayabilir.
+
+WHILE döngüsü, belirli bir koşul sağlandığı sürece çalışır.
+Koşul FALSE olunca döngü sona erer.
+
+BEGIN ... END, SQL Server'da birden fazla SQL ifadesini bir blok içinde gruplamak için kullanılır.
+ Genellikle şu yerlerde kullanılır:
+1️.Koşullu ifadeler (IF ... ELSE)
+2️.Döngüler (WHILE)
+3️.Stored Procedure (CREATE PROCEDURE)
+4️.Trigger (Tetikleyiciler)
+5️.Transaction Yönetimi (BEGIN TRANSACTION ... COMMIT)
+
+CASE ... END, WHEN ... THEN Kullanımı ve Anlamı (MSSQL)
+SQL Server'da CASE ... END, koşullu ifadeleri (if-else mantığında) çalıştırmak için kullanılır.
+WHEN ... THEN → Şarta göre hangi değerin döneceğini belirler.
+ELSE → Hiçbir şart sağlanmazsa dönecek varsayılan değeri belirler.
+END → CASE yapısının kapanışıdır.
+*/
+
+
+/*Functions in SQL server can be broadly divided into 2 categoris
+1. Built-in functions
+2. User Defined functions*/
+
+--ASCII(Character_Expression) - Returns the ASCII code of the given character expression.
+SELECT ASCII('A')--Output: 65
+SELECT ASCII('ABC')--Output: 65
+SELECT ASCII('BC')--Output: 66
+
+--CHAR(Integer_Expression) - Converts an int ASCII code to a character. The Integer_Expression, 
+--should be between 0 and 255.
+SELECT CHAR(65)
+
+--The following SQL, prints all the characters for the ASCII values from o thru 255
+DECLARE @Start INT
+SET @Start = 65
+WHILE(@Start<=90)
+BEGIN
+     PRINT CHAR(@Start)
+	 SET @Start = @Start + 1 
+END
+
+
+--Printing lowercase alphabets using CHAR() function:
+DECLARE @Start INT
+SET @Start = 97
+WHILE(@Start<=122)
+BEGIN
+     PRINT CHAR(@Start)
+	 SET @Start = @Start +1
+END
+
+
+
+--Another way of printing lower case alphabets using CHAR() and LOWER() functions.
+Declare @Number int
+Set @Number = 65
+While(@Number <= 90)
+Begin
+ Print LOWER(CHAR(@Number))
+ Set @Number = @Number + 1
+End
+
+--LTRIM(Character_Expression) - Removes blanks on the left handside of the given character expression.
+--Example: Removing the 3 white spaces on the left hand side of the '   Hello' string using LTRIM() function.
+SELECT ('      HELLO')--Output:      HELLO
+SELECT LTRIM('      HELLO')--Output:HELLO
+
+--RTRIM(Character_Expression) - Removes blanks on the right hand side of the given character expression.
+
+Example: Removing the 3 white spaces on the left hand side of the 'Hello   ' string using RTRIM() function.
+Select RTRIM('Hello   ')
+Output: Hello
+
+Example: To remove white spaces on either sides of the given character expression, use LTRIM() and RTRIM() as shown below.
+Select LTRIM(RTRIM('   Hello   '))
+Output: Hello
+
+LOWER(Character_Expression) - Converts all the characters in the given Character_Expression, to lowercase letters.
+
+Example: Select LOWER('CONVERT This String Into Lower Case')
+Output: convert this string into lower case
+
+UPPER(Character_Expression) - Converts all the characters in the given Character_Expression, to uppercase letters.
+Example: Select UPPER('CONVERT This String Into upper Case')
+Output: CONVERT THIS STRING INTO UPPER CASE
+
+REVERSE('Any_String_Expression') - Reverses all the characters in the given string expression.
+Example: Select REVERSE('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+Output: ZYXWVUTSRQPONMLKJIHGFEDCBA
+
+LEN(String_Expression) - Returns the count of total characters, in the given string expression,
+excluding the blanks at the end of the expression.
+
+Example: Select LEN('SQL Functions   ')
+Output: 13/
+
